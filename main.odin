@@ -7,66 +7,72 @@ main :: proc() {
     rl.InitWindow(800, 450, " ")
     defer rl.CloseWindow()
 
-    //set to 80 because its cooler than 60
-    rl.SetTargetFPS(60)
     score:int = 0
 
-    oscillatior_y : f32 = 225
-    oscillator_vis : bool = true
-    arrow_pos := rl.Vector2{400,225}
-    was_arrow_shot := false
-    arrow_hit := false
+    player_arrow:= arrow{
+    	pos = rl.Vector2{400, 225},
+    	scale = 0.8,
+    	speed = 400.0,
+    	arrow_state = .Aiming
+    }
+
+    arrow_oscillator:= oscillatior{
+    	pos = player_arrow.pos,
+    	highest = 0.0,
+    	lowest = 450.0,
+    	speed = 250.0,
+    	dir = 1,
+    	visible = true,
+    }
+
+    oscillatior_crosshair:= arrow{
+    	pos = arrow_oscillator.pos,
+    	scale = player_arrow.scale,
+    }
+
+    main_target := target{
+    	pos = rl.Vector2{780,225},
+    	size = rl.Vector2{10,100},
+    }
 
     for !rl.WindowShouldClose() {
-    	input(&arrow_pos, &was_arrow_shot,&arrow_hit, &oscillator_vis)
-    	if !was_arrow_shot {arrow_pos.y = oscillatior_y}
-    	// arrow_oscillation(&arrow_pos,0.0,450,5)
+
+    	//input, i will make changes later
+    	input(&player_arrow,&arrow_oscillator)
+    	board, bullseye : rl.Rectangle = make_target(main_target)
+
+    	//attaching oscillator to the crosshair
+    	oscillatior_crosshair.pos.y = arrow_oscillator.pos.y
+
         rl.BeginDrawing()
-        oscillatior(&oscillatior_y,0,450,10, oscillator_vis)
-        draw_arrow(arrow_pos)
-        // rl.DrawRectangleRec(arrow_collision_shape(arrow_pos), rl.RED)
-        rl.DrawRectangleRec(make_target(), rl.RED)
-        collisions(arrow_collision_shape(arrow_pos), make_target(), &score)
-        rl.ClearBackground(rl.RAYWHITE)
+
+        //arrow movemnt and draw
+        oscillatior_move(&arrow_oscillator, &oscillatior_crosshair)
+        draw_arrow(&player_arrow)
+
+        //target and collisions
+        draw_target(board, bullseye)
+        collisions(arrow_collision_shape(player_arrow), board, bullseye,&player_arrow.arrow_state, &score)
+
+        //showing score
         rl.DrawText(fmt.ctprint("SCORE :", score),10,10,20,rl.BLACK)
-        // rl.DrawFPS(10, 10)
+        rl.ClearBackground(rl.RAYWHITE)
         rl.EndDrawing()
     }
 }
 
-input :: proc (pos:^rl.Vector2, shoot:^bool, hit:^bool, osc_vis :^bool) {
-	// if !shoot^ {arrow_oscillation(pos,0.0,450,5)}
-	if rl.IsKeyPressed(.SPACE) || rl.IsMouseButtonPressed(.LEFT){
-		shoot^ = true
-		osc_vis^ = false
+collisions :: proc(player, board, bullseye : rl.Rectangle, player_state : ^arrow_states, score: ^int){
+	collide_board : bool = rl.CheckCollisionRecs(player, board)
+	collide_bulleye : bool = rl.CheckCollisionRecs(player, bullseye)
+	if_collide : bool = collide_board || collide_bulleye
+
+	if if_collide && player_state^ == .Flying{
+		if collide_board{score^ += 1}
+		if collide_bulleye{score^ += 10}
+		player_state^ = .Hit
 	}
 
-	if shoot^ {
-		arrow_shoot(pos)
-	}
-
-	if pos.x > 1000{
-		shoot^ = false
-		osc_vis^ = true
-		hit^ = true
-	}
-
-	if hit^{
-		hit^ = false
-		pos.x = 400.0
-	}
-}
-
-collisions :: proc(rec1,rec2 : rl.Rectangle, score: ^int){
-	@(static) was_colliding : bool = false
-	if_collide : bool = rl.CheckCollisionRecs(rec1, rec2)
-
-	if if_collide && !was_colliding{
-		score^ += 1
-		was_colliding = true
-	}
-
-	if !if_collide && was_colliding{
-		was_colliding = false
+	if !if_collide && player_state^ == .Hit{
+		player_state^ = .Aiming
 	}
 }

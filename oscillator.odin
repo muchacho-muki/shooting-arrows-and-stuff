@@ -2,11 +2,19 @@ package main
 
 import rl "vendor:raylib"
 
-oscillatior :: proc(oscillatior_y : ^f32, highest,lowest,speed:f32 , vis:bool){
-	if vis{	draw_arrow(rl.Vector2{400, oscillatior_y^})}
-	@(static)direction:f32= 1
-	oscillatior_y^ += speed * direction
+oscillatior :: struct {
+	pos: rl.Vector2,
+	highest: f32,
+	lowest: f32,
+	speed: f32,
+	dir: f32,
+	visible: bool,
+}
+
+oscillatior_move :: proc(osc : ^oscillatior, crosshair: ^arrow){
+	if osc.visible{	draw_arrow(crosshair)}
+	osc.pos.y += osc.speed * osc.dir * rl.GetFrameTime()
 	// if shoot && !hit{direction = 0} else {pos.y = highest}
-	if oscillatior_y^ <= highest {oscillatior_y^ = highest; direction = 1}
-	if oscillatior_y^ >= lowest {oscillatior_y^ = lowest; direction = -1}
+	if osc.pos.y <= osc.highest {osc.pos.y = osc.highest; osc.dir = 1}
+	if osc.pos.y >= osc.lowest {osc.pos.y = osc.lowest; osc.dir = -1}
 }
