@@ -11,7 +11,9 @@ input :: proc (player: ^arrow, osc: ^oscillatior) {
 		case .Aiming: 
 			reset_and_reaiming(player,osc)
 		 	if input_detect {
-				player.arrow_state = .Flying}
+				player.arrow_state = .Flying
+				no_of_ammo -= 1
+			}
 
 		case .Flying: arrow_shoot(player);
 					  osc.visible = false;
@@ -21,16 +23,17 @@ input :: proc (player: ^arrow, osc: ^oscillatior) {
 				   if input_detect {
 				   	reset_and_reaiming(player,osc)
 				   	player.arrow_state = .Flying
+				   	no_of_ammo -= 1
 				   }
 	}
 
 	if out_of_boundry{
-		player.pos.x = 400
+		player.pos.x = 200
 		player.arrow_state = .Aiming
 	}
 }
 
 reset_and_reaiming :: proc(player: ^arrow, osc: ^oscillatior){
-	player.pos.x = 400
+	player.pos.x = 200
 	player.pos.y = osc.pos.y;
 }

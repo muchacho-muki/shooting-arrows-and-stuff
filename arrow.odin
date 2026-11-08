@@ -13,10 +13,11 @@ arrow :: struct{
 	pos: rl.Vector2,
 	scale : f32,
 	speed : f32,
-	arrow_state : arrow_states
+	arrow_state : arrow_states,
+	hit_offset : f32,
 }
 
-draw_arrow :: proc(arrow : ^arrow) {
+draw_arrow :: proc(arrow : arrow) {
 	// head: tip at the pivot
 	rl.DrawTriangle(rl.Vector2{0, 0} * arrow.scale + arrow.pos , rl.Vector2{-19, -6} * arrow.scale + arrow.pos, rl.Vector2{-19, 6} * arrow.scale + arrow.pos, rl.BLACK)
 
@@ -33,10 +34,10 @@ draw_arrow :: proc(arrow : ^arrow) {
 }
 
 arrow_collision_shape :: proc(arrow : arrow) -> rl.Rectangle{
-	return rl.Rectangle{x = arrow.pos.x - 220 * arrow.scale, y= arrow.pos.y - 2 * arrow.scale, width = 203 * arrow.scale, height = 4 * arrow.scale}
+	return rl.Rectangle{x = arrow.pos.x - 20 * arrow.scale, y= arrow.pos.y - 2 * arrow.scale, width = 1 * arrow.scale, height = 4 * arrow.scale}
 }
 
 arrow_shoot :: proc(arrow : ^arrow){
-	arrow.speed = 400
+	arrow.speed = 1000
 	arrow.pos.x += arrow.speed * rl.GetFrameTime()
 }
